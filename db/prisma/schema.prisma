@@ -1,0 +1,82 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Home {
+  id      Int      @id
+  uuid    String   @unique @default(uuid())
+  name    String
+  members Member[]
+}
+
+model Member {
+  id                 Int            @id
+  uuid               String         @unique @default(uuid())
+  home               Home           @relation(fields: [homeId], references: id)
+  homeId             Int
+  ownedTaskInstances TaskInstance[]
+}
+
+model TaskProfile {
+  id          Int    @id
+  description String
+
+  taskDefinitions TaskDefinition[]
+}
+
+model TaskDefinition {
+  id            Int            @id
+  uuid          String         @unique @default(uuid())
+  name          String
+  taskInstances TaskInstance[]
+  taskProfile   TaskProfile    @relation(fields: [taskProfileId], references: id)
+  taskProfileId Int
+  taskSchedules TaskSchedule[]
+}
+
+// e.g. Daily, Weekly, Monthly
+model FrequencyType {
+  id Int @id
+  name String
+  taskSchedules TaskSchedule[]
+}
+
+// Use the iCalendar RRULE format
+model TaskSchedule {
+  id Int @id
+  startDate DateTime
+  endDate DateTime
+  // https://www.kanzaki.com/docs/ical/rrule.html
+  rrule String
+  taskDefinitionId Int
+  taskDefinition TaskDefinition @relation(fields: [taskDefinitionId], references: id)
+  frequencyTypeId Int
+  frequencyType FrequencyType @relation(fields: [frequencyTypeId], references: id)
+}
+
+model TaskInstance {
+  id               Int            @id
+  uuid             String         @unique @default(uuid())
+  taskDefinition   TaskDefinition @relation(fields: [taskDefinitionId], references: id)
+  taskDefinitionId Int
+  createdAt        DateTime
+  createdBy        Member?        @relation(fields: [createdById], references: id)
+  createdById      Int?
+
+  history TaskHistory[]
+}
+
+model TaskHistory {
+  id             Int          @id
+  taskInstance   TaskInstance @relation(fields: [taskInstanceId], references: id)
+  taskInstanceId Int
+  description    String
+}

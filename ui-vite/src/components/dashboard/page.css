@@ -1,0 +1,16 @@
+.task-column {
+    overflow-y: auto;
+    max-height: 100%;
+}
+
+.bottom-right-button {
+    position: fixed;
+    bottom: 1rem;
+    right: 1rem;
+}
+
+.circle-button {
+    width: 7rem;
+    height: 7rem;
+    font-size: 30px !important;
+}
