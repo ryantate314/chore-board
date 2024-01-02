@@ -1,20 +1,19 @@
 
 import { v4 as uuid } from 'uuid';
+import { TaskStatus } from '../models/taskStatus';
+import { Task } from '../models/task.model';
+import { TaskDefinition } from '../models/taskDefinition.model';
 
 export const MAX_DATE = new Date("9999-12-31T23:59:59.999Z");
 
-export const profiles = {
-    default: "default"
-};
-
-
-let definitions = [
+let definitions: TaskDefinition[] = [
     {
-        id: "foo",
+        id: "7b987da7-20da-48b7-90d3-8ee687707c56",
         shortDescription: "Take out the Trash",
+        description: "",
         schedules: [
             {
-                taskDefinitionId: "foo",
+                taskDefinitionId: "7b987da7-20da-48b7-90d3-8ee687707c56",
                 activeEndDate: MAX_DATE,
                 activeStartDate: new Date("2023-10-01T12:00:00.000Z"),
                 rrule: "RRULE:FREQ=DAILY"
@@ -23,62 +22,51 @@ let definitions = [
     }
 ];
 
-let tasks = [
+let tasks: Task[] = [
     {
         id: "bar",
         definition: definitions[0],
         createdAt: new Date("2023-10-09T14:12:00.000Z"),
         instanceDate: new Date("2023-10-10T12:00:00.000Z"),
-        status: 'ToDo'
+        status: TaskStatus.Todo
     }
 ];
-
-export const taskStatus = {
-    complete: "Done",
-    deleted: "Deleted",
-    todo: "ToDo",
-    upcoming: "Upcoming"
-};
 
 export const taskRepository = {
     getDefinitions: () => {
         return [...definitions];
     },
-    /**
-     * @param {Date} startDate 
-     * @param {Date} endDate 
-     */
-    getDefinitionSchedules: (startDate, endDate) => {
+    getDefinitionSchedules: (startDate: Date, endDate: Date) => {
         return definitions.map(x => x.schedules)
             .reduce((all, schedules) => all.concat(schedules), [])
             .filter(x =>
                 // https://stackoverflow.com/a/325964
-                x.activeStartDate <= endDate.getTime() && x.activeEndDate >= startDate.getTime()
+                x.activeStartDate.getTime() <= endDate.getTime() && x.activeEndDate.getTime() >= startDate.getTime()
             );
     },
-    getLastCompletedTask: (taskDefinitionId) => {
-        return tasks.filter(x => x.definition.id == taskDefinitionId && x.status == taskStatus.complete)
+    getLastCompletedTask: (taskDefinitionId: string) => {
+        return tasks.filter(x => x.definition.id == taskDefinitionId && x.status == TaskStatus.Complete)
             .sort((a, b) => a.instanceDate.getTime() - b.instanceDate.getTime())[0] ?? null;
     },
-    getLastIncompleteTask: (taskDefinitionId) => {
+    getLastIncompleteTask: (taskDefinitionId: string) => {
         return tasks.filter(x => x.definition.id == taskDefinitionId
-                && x.status != taskStatus.complete
-                && x.status != taskStatus.deleted)
+                && x.status != TaskStatus.Complete
+                && x.status != TaskStatus.Deleted)
             .sort((a, b) => a.instanceDate.getTime() - b.instanceDate.getTime())
             [0] || null
     },
-    getDefinition: (id) => {
+    getDefinition: (id: string) => {
         return definitions.filter(x => x.id == id)
             [0] ?? null;
     },
-    getTasks: (startDate, endDate) => {
+    getTasks: (startDate: Date, endDate: Date) => {
         return tasks.filter(x => x.instanceDate >= startDate && x.instanceDate < endDate);
     },
-    getTask: (id) => {
+    getTask: (id: string) => {
         return tasks.filter(x => x.id == id)
             [0] ?? null
     },
-    createTask: (task) => {
+    createTask: (task: Task) => {
         task = {
             ...task,
             id: uuid(),
@@ -94,14 +82,14 @@ export const taskRepository = {
             ...task
         };
     },
-    updateTaskStatus: (taskId, status) => {
+    updateTaskStatus: (taskId: string, status: TaskStatus) => {
         tasks = tasks.map(x => x.id == taskId ?
             {
                 ...x,
                 status: status
             } : x);
     },
-    createTaskDefinition: (definition) => {
+    createTaskDefinition: (definition: TaskDefinition) => {
         const id = uuid();
         const newDefinition = {
             ...definition,
