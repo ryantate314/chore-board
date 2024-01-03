@@ -3,70 +3,86 @@ import { v4 as uuid } from 'uuid';
 import { TaskStatus } from '../models/taskStatus';
 import { Task } from '../models/task.model';
 import { TaskDefinition } from '../models/taskDefinition.model';
+import * as Models from './models';
+import { Op } from 'sequelize';
 
 export const MAX_DATE = new Date("9999-12-31T23:59:59.999Z");
 
-let definitions: TaskDefinition[] = [
-    {
-        id: "7b987da7-20da-48b7-90d3-8ee687707c56",
-        shortDescription: "Take out the Trash",
-        description: "",
-        schedules: [
-            {
-                taskDefinitionId: "7b987da7-20da-48b7-90d3-8ee687707c56",
-                activeEndDate: MAX_DATE,
-                activeStartDate: new Date("2023-10-01T12:00:00.000Z"),
-                rrule: "RRULE:FREQ=DAILY"
-            }
-        ]
-    }
-];
-
-let tasks: Task[] = [
-    {
-        id: "bar",
-        definition: definitions[0],
-        createdAt: new Date("2023-10-09T14:12:00.000Z"),
-        instanceDate: new Date("2023-10-10T12:00:00.000Z"),
-        status: TaskStatus.Todo
-    }
-];
-
 export const taskRepository = {
     getDefinitions: () => {
-        return [...definitions];
+        return Models.TaskDefinition.findAll({
+            include: Models.TaskSchedule
+        });
     },
     getDefinitionSchedules: (startDate: Date, endDate: Date) => {
-        return definitions.map(x => x.schedules)
-            .reduce((all, schedules) => all.concat(schedules), [])
-            .filter(x =>
-                // https://stackoverflow.com/a/325964
-                x.activeStartDate.getTime() <= endDate.getTime() && x.activeEndDate.getTime() >= startDate.getTime()
-            );
+        return Models.TaskSchedule.findAll({
+            where: {
+                // Checking between dates: https://stackoverflow.com/a/325964
+                startDate: {
+                    [Op.lte]: endDate
+                },
+                endDate: {
+                    [Op.gte]: startDate
+                },
+                '$TaskDefinition$.deletedAt$': null
+            },
+            include: Models.TaskDefinition
+        });
     },
     getLastCompletedTask: (taskDefinitionId: string) => {
-        return tasks.filter(x => x.definition.id == taskDefinitionId && x.status == TaskStatus.Complete)
-            .sort((a, b) => a.instanceDate.getTime() - b.instanceDate.getTime())[0] ?? null;
+        return Models.TaskInstance.findOne({
+            where: {
+                taskDefinitionId: taskDefinitionId,
+                status: TaskStatus.Complete
+            },
+            order: [
+                ['instanceDate', 'DESC']
+            ],
+            include: Models.TaskDefinition
+        });
     },
     getLastIncompleteTask: (taskDefinitionId: string) => {
-        return tasks.filter(x => x.definition.id == taskDefinitionId
-                && x.status != TaskStatus.Complete
-                && x.status != TaskStatus.Deleted)
-            .sort((a, b) => a.instanceDate.getTime() - b.instanceDate.getTime())
-            [0] || null
+        return Models.TaskInstance.findOne({
+            where: {
+                status: {
+                    [Op.or]: [
+                        null,
+                        { [Op.notIn]: [1, 2] }
+                    ]
+                },
+                taskDefinitionId: taskDefinitionId
+            },
+            order: [
+                ['instanceDate', 'DESC']
+            ]
+        });
     },
     getDefinition: (id: string) => {
-        return definitions.filter(x => x.id == id)
-            [0] ?? null;
+        return Models.TaskDefinition.findByPk(id, {
+            include: Models.TaskSchedule
+        });
     },
     getTasks: (startDate: Date, endDate: Date) => {
-        return tasks.filter(x => x.instanceDate >= startDate && x.instanceDate < endDate);
+        return Models.TaskInstance.findAll({
+            where: {
+                instanceDate: {
+                    [Op.gte]: startDate,
+                    [Op.lt]: endDate
+                }
+            },
+            include: Models.TaskDefinition
+        });
     },
     getTask: (id: string) => {
-        return tasks.filter(x => x.id == id)
-            [0] ?? null
+        return Models.TaskInstance.findByPk(id, {
+            include: Models.TaskDefinition
+        });
     },
     createTask: (task: Task) => {
+        Models.TaskInstance.create({
+            instanceDate: task.instanceDate,
+            taskDefinitionId: task.definition.id
+        })
         task = {
             ...task,
             id: uuid(),
