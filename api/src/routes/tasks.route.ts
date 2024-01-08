@@ -23,7 +23,7 @@ const getTasksValidationRules = [
             .withMessage("endDate is must be a valid date.")
         .toDate(),
 ];
-router.get("/", getTasksValidationRules, (req: Request, res: Response) => {
+router.get("/", getTasksValidationRules, async (req: Request, res: Response) => {
 
     const errors = validationResult(req);
 
@@ -36,7 +36,7 @@ router.get("/", getTasksValidationRules, (req: Request, res: Response) => {
     const startDate = new Date(req.query.startDate!.toString());
     const endDate = new Date(req.query.endDate!.toString());
 
-    const tasks = taskService.getTasks(startDate, endDate);
+    const tasks = await taskService.getTasks(startDate, endDate);
 
     res.status(200)
         .json(tasks);
@@ -50,11 +50,11 @@ const updateStatusValidators = [
         .exists()
         .isIn(Object.values(TaskStatus))
 ];
-router.put("/:id/status", (req: Request, res: Response) => {
+router.put("/:id/status", async (req: Request, res: Response) => {
     const id = req.params.id;
     const newStatus = req.body.newStatus;
 
-    const newTask = taskService.updateStatus(id, newStatus);
+    const newTask = await taskService.updateStatus(id, newStatus);
 
     res.status(200)
         .json(newTask);

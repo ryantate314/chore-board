@@ -12,8 +12,8 @@ function getStatus(status: TaskStatus | null, instanceDate : Date) {
 }
 
 export const taskService = {
-    createTask: function(task: Task): Task {
-        let newTask = taskRepository.createTask(task);
+    createTask: async function(task: Task): Promise<Task> {
+        let newTask = await taskRepository.createTask(task);
 
         newTask = {
             ...newTask,
@@ -22,11 +22,11 @@ export const taskService = {
 
         return newTask;
     },
-    getTasks: function(startDate: Date, endDate: Date): Task[] {
-        const schedules = taskRepository.getDefinitionSchedules(startDate, endDate);
+    getTasks: async function(startDate: Date, endDate: Date): Promise<Task[]> {
+        const schedules = await taskRepository.getDefinitionSchedules(startDate, endDate);
         console.log("Found schedules: " + schedules);
     
-        let allConcreteInstances = taskRepository.getTasks(startDate, endDate);
+        let allConcreteInstances = await taskRepository.getTasks(startDate, endDate);
     
         let allTasks: Task[] = [];
     
@@ -40,9 +40,9 @@ export const taskService = {
     
             let nextInstanceDate: Date | null = schedule.activeStartDate;
     
-            let lastIncompleteTask = taskRepository.getLastIncompleteTask(schedule.taskDefinitionId!);
+            let lastIncompleteTask = await taskRepository.getLastIncompleteTask(schedule.taskDefinitionId!);
             if (lastIncompleteTask == null) {
-                let lastCompletedTask = taskRepository.getLastCompletedTask(schedule.taskDefinitionId!);
+                let lastCompletedTask = await taskRepository.getLastCompletedTask(schedule.taskDefinitionId!);
                 if (lastCompletedTask !== null) {
                     console.log("Last completed task", lastCompletedTask.instanceDate);
                     nextInstanceDate = rule.after(lastCompletedTask.instanceDate)
@@ -67,7 +67,8 @@ export const taskService = {
                     ...concreteInstances,
                     {
                         id: null,
-                        definition: taskRepository.getDefinition(schedule.taskDefinitionId!),
+                        // TODO add error checking
+                        definition: (await taskRepository.getDefinition(schedule.taskDefinitionId!))!,
                         instanceDate: nextInstanceDate,
                         // If the instance date is in the past
                         status: getStatus(null, nextInstanceDate),
@@ -88,7 +89,7 @@ export const taskService = {
 
         return allTasks;
     },
-    updateStatus: function(id: string, newStatus: TaskStatus): Task {
+    updateStatus: async function(id: string, newStatus: TaskStatus): Promise<Task> {
         const oldTask = taskRepository.getTask(id);
         if (oldTask == null) {
             throw new Error("Could not find task with id " + id);
@@ -99,8 +100,8 @@ export const taskService = {
             status: newStatus
         };
     
-        taskRepository.updateTaskStatus(id, newTask.status);
+        await taskRepository.updateTaskStatus(id, newTask.status);
 
-        return newTask;
+        return (await taskRepository.getTask(id))!;
     }
 }

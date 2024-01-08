@@ -29,6 +29,20 @@ export default async function() {
     taskDefinitionInit(sequelize);
     taskInstanceInit(sequelize);
     taskScheduleInit(sequelize);
+
+    TaskDefinition.hasMany(TaskSchedule, {
+        foreignKey: 'taskDefinitionId'
+    });
+    TaskSchedule.belongsTo(TaskDefinition, {
+        foreignKey: 'taskDefinitionId'
+    });
+
+    TaskDefinition.hasMany(TaskInstance, {
+        foreignKey: 'taskDefinitionId'
+    });
+    TaskInstance.belongsTo(TaskDefinition, {
+        foreignKey: "taskDefinitionId"
+    });
     
     await sequelize.sync({
         logging: console.log,

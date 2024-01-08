@@ -6,7 +6,7 @@ import { taskRepository } from "../data/task.repository";
 export const MAX_DATE = new Date("9999-12-31T23:59:59.999Z");
 
 export const taskDefinitionService = {
-    createTaskDefinition: function(dto: CreateTaskDefinitionDto): TaskDefinition {
+    createTaskDefinition: async function(dto: CreateTaskDefinitionDto): Promise<TaskDefinition> {
         let schedules: Schedule[] = [];
         if (dto.doesRepeat) {
             const options: Partial<RRuleOptions> = {
@@ -47,7 +47,7 @@ export const taskDefinitionService = {
             schedules: schedules
         };
 
-        const newDefinition = taskRepository.createTaskDefinition(definition);
+        const newDefinition = await taskRepository.createTaskDefinition(definition);
 
         return newDefinition;
     }

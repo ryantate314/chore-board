@@ -2,7 +2,7 @@ import { CreationOptional, DataTypes, InferAttributes, InferCreationAttributes, 
 import { TaskSchedule } from "./taskSchedule.model";
 
 export class TaskDefinition extends Model<InferAttributes<TaskDefinition>, InferCreationAttributes<TaskDefinition>> {
-    declare id: number;
+    declare id: CreationOptional<number>;
     declare uuid: CreationOptional<string>;
 
     declare shortDescription: string;
@@ -37,6 +37,5 @@ export const init = function(sequelize: Sequelize) {
         paranoid: true
     });
 
-    TaskDefinition.hasMany(TaskSchedule);
-    TaskSchedule.belongsTo(TaskDefinition);
+    
 }

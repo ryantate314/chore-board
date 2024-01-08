@@ -7,6 +7,7 @@ import express, { Request, Response } from "express";
 import taskDefinitionRoutes from "./routes/task-definitions.route";
 import taskRoutes from "./routes/tasks.route";
 import cors from "cors";
+import dbInit from "./data/sequelize"
 
 
 
@@ -23,6 +24,9 @@ app.get("/", (req: Request, res: Response) => {
 app.use('/task-definitions', taskDefinitionRoutes);
 app.use('/tasks', taskRoutes);
 
-app.listen(port, () => {
-  console.log(`Server running at http://localhost:${port}`);
-});
+dbInit().then(() =>
+  app.listen(port, () => {
+    console.log(`Server running at http://localhost:${port}`);
+  })
+);
+

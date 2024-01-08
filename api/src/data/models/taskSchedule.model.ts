@@ -30,7 +30,7 @@ export const taskScheduleInit = function(sequelize: Sequelize) {
             type: DataTypes.STRING
         },
         taskDefinitionId: {
-            type: DataTypes.NUMBER,
+            type: DataTypes.INTEGER,
             allowNull: false
         }
     }, {

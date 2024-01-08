@@ -11,8 +11,8 @@ import { taskDefinitionService } from '../services/task-definition.service';
 const router = Router();
 
 // Get all task definitions
-router.get("/", (request, response) => {
-    const tasks = taskRepository.getDefinitions();
+router.get("/", async (request, response) => {
+    const tasks = await taskRepository.getDefinitions();
 
     response.status(200)
         .json(tasks);
@@ -57,7 +57,7 @@ const createTaskDefinitionValidators = [
         .isISO8601()
         .toDate()
 ];
-router.post("/", createTaskDefinitionValidators, (req: Request, res: Response) => {
+router.post("/", createTaskDefinitionValidators, async (req: Request, res: Response) => {
     const errors = validationResult(req);
 
     if (!errors.isEmpty())
@@ -66,7 +66,7 @@ router.post("/", createTaskDefinitionValidators, (req: Request, res: Response) =
 
     const dto = <CreateTaskDefinitionDto>req.body;
 
-    const definition = taskDefinitionService.createTaskDefinition(dto);
+    const definition = await taskDefinitionService.createTaskDefinition(dto);
 
     return res.status(200)
         .json(definition);
@@ -83,7 +83,7 @@ const createTaskValidationRules = [
         .isISO8601()
             .withMessage("instanceDate must be a valid date string.")
 ];
-router.post("/:taskDefinitionId/", createTaskValidationRules, (req: Request, res: Response) => {
+router.post("/:taskDefinitionId/", createTaskValidationRules, async (req: Request, res: Response) => {
     const errors = validationResult(req);
 
     if (!errors.isEmpty())
@@ -91,7 +91,7 @@ router.post("/:taskDefinitionId/", createTaskValidationRules, (req: Request, res
             .json({ errors: errors.array() });
 
     const definitionId = req.params.taskDefinitionId;
-    const definition = taskRepository.getDefinition(definitionId);
+    const definition = await taskRepository.getDefinition(definitionId);
 
     if (definition === null)
         return notFound(res, "Could not find task definition with id " + definitionId);
@@ -104,7 +104,7 @@ router.post("/:taskDefinitionId/", createTaskValidationRules, (req: Request, res
         createdAt: new Date()
     };
 
-    const newTask = taskService.createTask(task);
+    const newTask = await taskService.createTask(task);
 
     return res.status(200)
         .json(newTask);

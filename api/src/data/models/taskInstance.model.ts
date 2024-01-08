@@ -10,6 +10,8 @@ export class TaskInstance extends Model<InferAttributes<TaskInstance>, InferCrea
 
     declare taskDefinitionId: number;
     declare taskDefinition: NonAttribute<TaskDefinition>;
+
+    declare createdAt: Date;
 }
 
 export const taskInstanceInit = function(sequelize: Sequelize) {
@@ -26,7 +28,7 @@ export const taskInstanceInit = function(sequelize: Sequelize) {
             unique: true
         },
         status: {
-            type: DataTypes.NUMBER,
+            type: DataTypes.INTEGER,
             allowNull: true
         },
         instanceDate: {
@@ -34,16 +36,15 @@ export const taskInstanceInit = function(sequelize: Sequelize) {
             allowNull: false
         },
         taskDefinitionId: {
-            type: DataTypes.NUMBER,
+            type: DataTypes.INTEGER,
+            allowNull: false
+        },
+        createdAt: {
+            type: DataTypes.DATE,
             allowNull: false
         }
     }, {
         sequelize,
         paranoid: true
-    });
-
-    TaskDefinition.hasMany(TaskInstance);
-    TaskInstance.belongsTo(TaskDefinition, {
-        foreignKey: "taskDefinitionId"
     });
 }
