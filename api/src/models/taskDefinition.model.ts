@@ -1,7 +1,7 @@
 export interface TaskDefinition {
     id: string | null;
     shortDescription: string;
-    description: string;
+    description: string | null;
     schedules: Schedule[];
 }
 

@@ -3,10 +3,36 @@ import { v4 as uuid } from 'uuid';
 import { TaskStatus } from '../models/taskStatus';
 import { Task } from '../models/task.model';
 import { Schedule, TaskDefinition } from '../models/taskDefinition.model';
-import * as Models from './models';
-import { Op } from 'sequelize';
+import { PrismaClient, Prisma } from '@prisma/client';
+import { Disposable } from 'tsyringe';
 
 export const MAX_DATE = new Date("9999-12-31T23:59:59.999Z");
+
+namespace Types {
+    export type TaskDefinitionWithSchedules = Prisma.TaskDefinitionGetPayload<{
+        include: {
+            schedules: true
+        }
+    }>;
+
+    export type TaskInstanceWithDefinition = Prisma.TaskInstanceGetPayload<{
+        include: {
+            taskDefinition: true
+        }
+    }>;
+
+    export type TaskSchedule = Prisma.TaskScheduleGetPayload<{
+        include: {
+        }
+    }>;
+
+    export type TaskScheduleWithDefinition = Prisma.TaskScheduleGetPayload<{
+        include: {
+            taskDefinition: true
+        }
+    }>;
+}
+
 
 function mapStatusToModel(status: TaskStatus): number {
     switch (status) {
@@ -40,39 +66,11 @@ function mapStatusToDto(status: number | null): TaskStatus | null {
     }
 }
 
-function mapTaskDefinitionToDto(definition: Models.TaskDefinition | null): TaskDefinition | null {
-    if (definition == null)
-        return null;
 
-    return {
-        id: definition.uuid,
-        description: definition.description,
-        schedules: definition.schedules.map(x => mapScheduleToDto(definition.uuid, x)),
-        shortDescription: definition.shortDescription
-    };
-}
 
-function mapScheduleToDto(taskDefinitionId: string, schedule: Models.TaskSchedule): Schedule {
-    return {
-        activeEndDate: schedule.endDate,
-        activeStartDate: schedule.startDate,
-        rrule: schedule.rrule,
-        taskDefinitionId: taskDefinitionId
-    };
-}
 
-function mapTaskToDto(task: Models.TaskInstance | null) : Task | null {
-    if (task === null)
-        return null;
 
-    return {
-        createdAt: task.createdAt,
-        definition: mapTaskDefinitionToDto(task.taskDefinition)!,
-        id: task.uuid,
-        instanceDate: task.instanceDate,
-        status: mapStatusToDto(task.status)
-    }
-}
+
 
 function _getDefinition(id: string): Promise<Models.TaskDefinition | null> {
     return Models.TaskDefinition.findOne({
@@ -85,45 +83,116 @@ function _getDefinition(id: string): Promise<Models.TaskDefinition | null> {
     
 };
 
-export const taskRepository = {
-    getDefinitions: async (): Promise<TaskDefinition[]> => {
-        const definitions = await Models.TaskDefinition.findAll({
-            include: Models.TaskSchedule
+export class TaskRepository implements Disposable{
+    private readonly _client: PrismaClient;
+    /**
+     *
+     */
+    constructor() {
+        this._client = new PrismaClient();
+    }
+
+    public async dispose(): Promise<void> {
+        await this._client.$disconnect();
+    }
+
+    public async getDefinitions(): Promise<TaskDefinition[]> {
+        const definitions = await this._client.taskDefinition.findMany({
+            where: {
+                deletedAt: null
+            },
+            include: {
+                schedules: true
+            }
         });
 
-        return definitions.map(x => mapTaskDefinitionToDto(x)!);
-    },
-    getDefinitionSchedules: async (startDate: Date, endDate: Date): Promise<Schedule[]> => {
-        const schedules = await Models.TaskSchedule.findAll({
+        return definitions.map(x => this.mapTaskDefinitionToDto(x)!);
+    }
+
+    private mapTaskDefinitionToDto(definition: Types.TaskDefinitionWithSchedules | null): TaskDefinition | null {
+        if (definition == null)
+            return null;
+
+        return {
+            id: definition.uuid,
+            shortDescription: definition.shortDescription,
+            description: definition.description,
+            schedules: definition.schedules.map(this.mapScheduleToDto)
+        };
+    }
+
+    public async getDefinitionSchedules(startDate: Date, endDate: Date): Promise<Schedule[]> {
+        const schedules = await this._client.taskSchedule.findMany({
             where: {
                 // Checking between dates: https://stackoverflow.com/a/325964
                 startDate: {
-                    [Op.lte]: endDate
+                    lte: endDate
                 },
                 endDate: {
-                    [Op.gte]: startDate
+                    gte: startDate
                 },
-                '$TaskDefinition$.deletedAt$': null
+                taskDefinition: {
+                    deletedAt: null
+                }
             },
-            include: Models.TaskDefinition
+            include: {
+                taskDefinition: true
+            }
         });
 
-        return schedules.map(x => mapScheduleToDto(x.taskDefinition.uuid, x));
-    },
-    getLastCompletedTask: async (taskDefinitionId: string): Promise<Task | null> => {
-        const task = await Models.TaskInstance.findOne({
+        return schedules.map(this.mapScheduleToDto);
+    }
+
+    private mapScheduleWithDefinitionToDto(schedule: Types.TaskScheduleWithDefinition): Schedule {
+        return this.mapScheduleToDto(schedule.taskDefinition.uuid, schedule);
+    }
+
+    private mapScheduleToDto(taskDefinitionId: string, schedule: Types.TaskSchedule): Schedule {
+        return {
+            activeEndDate: schedule.endDate,
+            activeStartDate: schedule.startDate,
+            rrule: schedule.rrule,
+            taskDefinitionId: taskDefinitionId
+        };
+    }
+
+    public async getLastCompletedTask(taskDefinitionId: string): Promise<Task | null> {
+        const task = await this._client.taskInstance.findFirst({
             where: {
-                taskDefinitionId: taskDefinitionId,
-                status: TaskStatus.Complete
+                taskDefinition: {
+                    uuid: taskDefinitionId
+                },
+                taskStatusId: mapStatusToModel(TaskStatus.Complete)
             },
-            order: [
-                ['instanceDate', 'DESC']
-            ],
-            include: Models.TaskDefinition
+            orderBy: {
+                instanceDate: 'desc'
+            },
+            include: {
+                taskDefinition: true
+            }
         });
 
-        return mapTaskToDto(task);
-    },
+        return this.mapTaskToDto(task);
+    }
+
+    public mapTaskToDto(task: Types.TaskInstanceWithDefinition | null) : Task | null {
+        if (task === null)
+            return null;
+    
+        return {
+            createdAt: task.createdAt,
+            definition: this.mapTaskDefinitionToDto(task.taskDefinition)!,
+            id: task.uuid,
+            instanceDate: task.instanceDate,
+            status: mapStatusToDto(task.taskStatusId)
+        }
+    }
+}
+
+export const taskRepository = {
+   
+   
+    
     getLastIncompleteTask: async (taskDefinitionId: string): Promise<Task | null> => {
         const task = await Models.TaskInstance.findOne({
             where: {
