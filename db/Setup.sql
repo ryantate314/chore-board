@@ -9,6 +9,10 @@ DROP TABLE IF EXISTS app.FamilyMember;
 
 DROP SCHEMA IF EXISTS app;
 
+DROP TABLE IF EXISTS auth.[User];
+
+DROP SCHEMA IF EXISTS auth;
+
 GO
 
 CREATE SCHEMA app;
@@ -34,8 +38,8 @@ VALUES ('U', 'Upcoming')
 GO
 
 CREATE TABLE app.FamilyMember (
-	FamilyMemberId INT NOT NULL IDENTITY(1, 1)
-	, FamilyMemberGuid UNIQUEIDENTIFIER NOT NULL
+	Id INT NOT NULL IDENTITY(1, 1)
+	, Uuid UNIQUEIDENTIFIER NOT NULL
 		CONSTRAINT DF_FamilyMember_FamilyMemberGuid
 		DEFAULT (NEWID())
 	, FirstName VARCHAR(32) NOT NULL
@@ -45,14 +49,16 @@ CREATE TABLE app.FamilyMember (
 		DEFAULT(CURRENT_TIMESTAMP)
 	, DeletedAt DATETIME NULL
 	, CONSTRAINT PK_FamilyMember
-		PRIMARY KEY (FamilyMemberId)
+		PRIMARY KEY (Id)
+	, CONSTRAINT UQ_FamilyMember_Uuid
+		UNIQUE (Uuid)
 );
 
 GO
 
 CREATE TABLE app.TaskDefinition (
-	TaskDefinitionId INT NOT NULL IDENTITY(1, 1)
-	, TaskDefinitionGuid UNIQUEIDENTIFIER NOT NULL
+	Id INT NOT NULL IDENTITY(1, 1)
+	, Uuid UNIQUEIDENTIFIER NOT NULL
 		CONSTRAINT DF_TaskDefinition_TaskDefinitionGuid
 		DEFAULT (NEWID())
 	, ShortDescription NVARCHAR(128) NOT NULL
@@ -60,19 +66,17 @@ CREATE TABLE app.TaskDefinition (
 	, CreatedAt DATETIME NOT NULL
 		CONSTRAINT DF_TaskDefintion_CreatedAt
 		DEFAULT (CURRENT_TIMESTAMP)
-	, CreatedBy INT NOT NULL
 	, DeletedAt DATETIME NULL
 	, CONSTRAINT PK_TaskDefintion
-		PRIMARY KEY (TaskDefinitionId)
-	, CONSTRAINT FK_TaskDefinition_CreatedBy_FamilyMember
-		FOREIGN KEY (CreatedBy)
-		REFERENCES app.FamilyMember (FamilyMemberId)
+		PRIMARY KEY (Id)
+	, CONSTRAINT UQ_TaskDefinition_Uuid
+		UNIQUE (Uuid)
 );
 
 GO
 
 CREATE TABLE app.TaskSchedule (
-	  TaskScheduleId INT NOT NULL IDENTITY(1, 1)
+	  Id INT NOT NULL IDENTITY(1, 1)
 	, StartDate DATETIME NOT NULL
 	, EndDate DATETIME NOT NULL
 	, RRule VARCHAR(128) NOT NULL
@@ -82,27 +86,49 @@ CREATE TABLE app.TaskSchedule (
 		DEFAULT (CURRENT_TIMESTAMP)
 	, DeletedAt DATETIME NULL
 	, CONSTRAINT PK_TaskSchedule
-		PRIMARY KEY (TaskScheduleId)
+		PRIMARY KEY (Id)
 	, CONSTRAINT FK_TaskSchedule_TaskDefinitionId_TaskDefinition
 		FOREIGN KEY (TaskDefinitionId)
-		REFERENCES app.TaskDefinition (TaskDefinitionId)
+		REFERENCES app.TaskDefinition (Id)
 );
 
 GO
 
 CREATE TABLE app.TaskInstance (
-	TaskInstanceId INT NOT NULL IDENTITY(1, 1)
-	, TaskInstanceGuid UNIQUEIDENTIFIER NOT NULL
-		CONSTRAINT DF_TaskInstance_TaskInstanceGuid
+	Id INT NOT NULL IDENTITY(1, 1)
+	, Uuid UNIQUEIDENTIFIER NOT NULL
+		CONSTRAINT DF_TaskInstance_Uuid
 		DEFAULT (NEWID())
 	, TaskDefinitionId INT NOT NULL
 	, InstanceDate DATETIME NOT NULL
 	, CONSTRAINT PK_TaskInstance
-		PRIMARY KEY (TaskInstanceId)
+		PRIMARY KEY (Id)
 	, CONSTRAINT FK_TaskInstance_TaskDefinitionId_TaskDefinition
 		FOREIGN KEY (TaskDefinitionId)
-		REFERENCES app.TaskDefinition (TaskDefinitionId)
+		REFERENCES app.TaskDefinition (Id)
+	, CONSTRAINT UQ_TaskInstance_Uuid
+		UNIQUE (Uuid)
 );
 
 GO
 
+CREATE SCHEMA auth;
+
+GO
+
+CREATE TABLE auth.[User] (
+	Id INT NOT NULL
+	, Uuid UNIQUEIDENTIFIER NOT NULL
+		CONSTRAINT DF_User_Uuid
+		DEFAULT (NEWID())
+	, Email VARCHAR(128) NOT NULL
+	, PasswordHash CHAR(128) NULL
+	, CreatedAt DATETIME NOT NULL
+		CONSTRAINT DF_User_CreatedAt
+		DEFAULT (CURRENT_TIMESTAMP)
+	, DeletedAt DATETIME NULL
+	, CONSTRAINT UQ_User_Uuid
+		UNIQUE (Uuid)
+)
+
+GO

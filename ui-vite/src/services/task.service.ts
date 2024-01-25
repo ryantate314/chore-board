@@ -1,7 +1,7 @@
 import { TaskDefinition, TaskInstance, TaskStatus } from '../models/task.model';
 
 
-const API_URL = "http://localhost:3001";
+const API_URL = "https://localhost:7067";
 
 const TaskService = {
     updateStatus: function(taskId: string, newStatus: TaskStatus): Promise<TaskInstance> {
