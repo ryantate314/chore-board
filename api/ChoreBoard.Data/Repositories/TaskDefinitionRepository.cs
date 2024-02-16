@@ -14,11 +14,13 @@ using Microsoft.EntityFrameworkCore.ChangeTracking;
 
 namespace ChoreBoard.Data.Repositories
 {
-    public class TaskDefinitionRepository : ITaskDefinitionRepo
+    internal class TaskDefinitionRepository : ITaskDefinitionRepo
     {
         private readonly ChoreBoardContext _context;
         private readonly ILogger<TaskDefinitionRepository> _logger;
+
         private readonly TaskDefinitionMapper _mapper = new TaskDefinitionMapper();
+        private readonly TaskScheduleMapper _scheduleMapper = new TaskScheduleMapper();
 
         public TaskDefinitionRepository(ChoreBoardContext context, ILogger<TaskDefinitionRepository> logger)
         {
@@ -34,7 +36,19 @@ namespace ChoreBoard.Data.Repositories
                 .ToListAsync();
 
             return definitions
-                .Select(_mapper.Map);
+                .Select(_mapper.Map)
+                .ToList();
+        }
+
+        public async Task<IEnumerable<Service.Models.TaskDefinition>> GetTaskDefinitions(IEnumerable<Guid> ids)
+        {
+            List<Models.TaskDefinition> definitions = await _context.TaskDefinitions
+                .Where(x => ids.Contains(x.Uuid))
+                .ToListAsync();
+
+            return definitions
+                .Select(_mapper.Map)
+                .ToList();
         }
 
         public async Task<Service.Models.TaskDefinition> CreateTaskDefinition(Service.Models.TaskDefinition definition)
@@ -48,6 +62,19 @@ namespace ChoreBoard.Data.Repositories
             await _context.SaveChangesAsync();
 
             return _mapper.Map(model);
+        }
+
+        public async Task<IEnumerable<Service.Models.TaskSchedule>> GetTaskSchedules(DateTime startDate, DateTime endDate)
+        {
+            List<Models.TaskSchedule> schedules = await _context.TaskSchedules
+                .Include(x => x.TaskDefinition)
+                // Checking between dates: https://stackoverflow.com/a/325964
+                .Where(x => x.StartDate <= endDate && x.EndDate >= startDate)
+                .Where(x => x.TaskDefinition.DeletedAt == null)
+                .ToListAsync();
+
+            return schedules.Select(_scheduleMapper.Map)
+                .ToList();
         }
     }
 }

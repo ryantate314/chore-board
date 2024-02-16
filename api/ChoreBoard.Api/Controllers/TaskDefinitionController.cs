@@ -3,6 +3,7 @@ using ChoreBoard.Service;
 using ChoreBoard.Service.Models;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -14,12 +15,14 @@ namespace ChoreBoard.Api.Controllers
     public class TaskDefinitionController : ControllerBase
     {
         private readonly ITaskDefinitionService _service;
+        private readonly ITaskService _taskService;
         private readonly ILogger<TaskDefinitionController> _logger;
 
-        public TaskDefinitionController(ITaskDefinitionService service, ILogger<TaskDefinitionController> logger)
+        public TaskDefinitionController(ITaskDefinitionService service, ILogger<TaskDefinitionController> logger, ITaskService taskService)
         {
             _service = service;
             _logger = logger;
+            _taskService = taskService;
         }
 
         [HttpGet]
@@ -31,12 +34,10 @@ namespace ChoreBoard.Api.Controllers
         }
 
         [HttpPost]
-        public async Task<IActionResult> Create(CreateTaskDefinitionDto dto)
+        public async Task<IActionResult> Create([FromBody] CreateTaskDefinitionDto dto)
         {
             if (!ModelState.IsValid)
-            {
                 return BadRequest(ModelState);
-            }
 
             _logger.LogDebug("Creating new task definition: " + dto.ShortDescription);
 
@@ -69,6 +70,25 @@ namespace ChoreBoard.Api.Controllers
             TaskDefinition newDefinition = await _service.Create(definition);
 
             return Ok(newDefinition);
+        }
+
+        [HttpPost("{taskDefinitionId}/tasks")]
+        public async Task<IActionResult> CreateTaskInstance([FromRoute] Guid taskDefinitionId, CreateTaskDto dto)
+        {
+            if (!ModelState.IsValid)
+                return BadRequest(ModelState);
+
+            TaskInstance task = await _taskService.CreateTask(new TaskInstance()
+            {
+                InstanceDate = dto.InstanceDate!.Value,
+                Status = dto.Status,
+                Definition = new TaskDefinition()
+                {
+                    Id  = taskDefinitionId,
+                }
+            });
+
+            return Ok(task);
         }
     }
 }

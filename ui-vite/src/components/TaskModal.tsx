@@ -1,7 +1,7 @@
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { useCallback, useEffect } from "react";
 
-import { faCheck } from '@fortawesome/free-solid-svg-icons'
+import { faCheck, faTrash } from '@fortawesome/free-solid-svg-icons'
 import dayjs from "dayjs";
 import { TaskInstance, TaskStatus } from "../models/task.model";
 import taskService from "../services/task.service";
@@ -26,6 +26,12 @@ export function TaskModal(props: TaskModalProps) {
         
         setTaskStatus(TaskStatus.Done);
     }; 
+
+    const handleDeleteTask = (event: any) => {
+        event.stopPropagation();
+
+        setTaskStatus(TaskStatus.Deleted);
+    }
 
     const escFunction = useCallback((event: any) => {
         if (event.key === "Escape") {
@@ -58,7 +64,7 @@ export function TaskModal(props: TaskModalProps) {
     return props.showModal ? <>
         <Modal show={props.showModal} onHide={handleHideModal}>
             <Modal.Header closeButton={true}>
-                <Modal.Title>{ task.definition.shortDescription }</Modal.Title>
+                <Modal.Title>{ task.definition.shortDescription } - { dayjs(task.instanceDate).format("MM/DD/YY") }</Modal.Title>
             </Modal.Header>
             <Modal.Body className="p-4">
                 {/* Swim Lane Buttons */}
@@ -74,18 +80,21 @@ export function TaskModal(props: TaskModalProps) {
                 </div>
                 <p dangerouslySetInnerHTML={{__html: task.definition.description}}></p>
                 {/* Added Date */}
-                <small title={dayjs(task.createdAt).format("DD/MM/YY h:mm a")}>Added { dayjs.duration(dayjs(task.createdAt).diff(dayjs())).humanize(true) }.</small>
+                <small title={dayjs(task.createdAt).format("MM/DD/YY h:mm a")}>Added { dayjs.duration(dayjs(task.createdAt).diff(dayjs())).humanize(true) }.</small>
                 <div>Task Definition: {task.definition.id}</div>
                 <div>Instance ID: {task.id}</div>
             </Modal.Body>
             <Modal.Footer>
                 {
                 task.status != TaskStatus.Done ?
-                    <Button className='w-24 h-24 rounded-full bg-yellow-500 fixed bottom-10 right-10 text-[24px]' title="Mark Task Complete" onClick={handleCompleteTaskClick}>
+                    <Button  title="Mark Task Complete" onClick={handleCompleteTaskClick}>
                         <FontAwesomeIcon icon={faCheck}></FontAwesomeIcon>
                     </Button>
                     : null
                 }
+                <Button title="Delete Task" variant="danger" onClick={handleDeleteTask}>
+                    <FontAwesomeIcon icon={faTrash}></FontAwesomeIcon>
+                </Button>
             </Modal.Footer>
         </Modal>
     </> : null;

@@ -10,8 +10,10 @@ namespace ChoreBoard.Api.Dto
         [Required]
         public string ShortDescription { get; set; }
         public string? Description { get; set; }
+
         [Required]
         public DateTime StartDate { get; set; }
+
         public DateTime? EndDate { get; set; }
         public List<int> DaysOfWeek { get; set; } = new();
         public int? Count { get; set; }

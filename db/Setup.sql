@@ -101,6 +101,8 @@ CREATE TABLE app.TaskInstance (
 		DEFAULT (NEWID())
 	, TaskDefinitionId INT NOT NULL
 	, InstanceDate DATETIME NOT NULL
+	, [Status] CHAR(1) NULL
+	, CompletedAt DATETIME NULL
 	, CONSTRAINT PK_TaskInstance
 		PRIMARY KEY (Id)
 	, CONSTRAINT FK_TaskInstance_TaskDefinitionId_TaskDefinition
@@ -108,7 +110,29 @@ CREATE TABLE app.TaskInstance (
 		REFERENCES app.TaskDefinition (Id)
 	, CONSTRAINT UQ_TaskInstance_Uuid
 		UNIQUE (Uuid)
+	, CONSTRAINT FK_TaskInstance_TaskStatus
+		FOREIGN KEY ([Status])
+		REFERENCES app.TaskStatus (StatusCode)
 );
+
+GO
+
+CREATE TABLE app.TaskStatusHistory (
+	Id INT NOT NULL IDENTITY(1, 1)
+	, TaskInstanceId INT NOT NULL
+	, ModifiedAt DATETIME NOT NULL
+		CONSTRAINT DF_TaskStatusHistory_ModifiedAt
+		DEFAULT (CURRENT_TIMESTAMP)
+	, FamilyMemberId INT NULL
+	, CONSTRAINT PK_TaskStatusHistory
+		PRIMARY KEY (Id)
+	, CONSTRAINT FK_TaskStatusHistory_TaskInstanceId
+		FOREIGN KEY (TaskInstanceId)
+		REFERENCES app.TaskInstance (ID)
+	, CONSTRAINT FK_TaskStatusHistory_FamilyMemberId
+		FOREIGN KEY (FamilyMemberId)
+		REFERENCES app.FamilyMember (Id)
+)
 
 GO
 
@@ -130,5 +154,55 @@ CREATE TABLE auth.[User] (
 	, CONSTRAINT UQ_User_Uuid
 		UNIQUE (Uuid)
 )
+
+GO
+
+CREATE OR ALTER PROCEDURE app.usp_GetTasks (
+	@startDate DATETIME
+	, @endDate DATETIME
+)
+AS
+BEGIN
+
+	SET NOCOUNT ON;
+
+	-- Schedules active during the provided dates
+	SELECT
+		  TS.StartDate
+		, TS.EndDate
+		, TS.RRule
+		, TD.Uuid
+	FROM app.TaskSchedule TS
+		JOIN app.TaskDefinition TD
+			ON TS.TaskDefinitionId = TD.Id
+	WHERE TS.StartDate <= @endDate
+		AND TS.EndDate >= @startDate
+		AND TD.DeletedAt IS NULL;
+
+	-- Concrete Task Instances during the provided dates
+	SELECT
+		TI.Uuid
+		, TI.InstanceDate
+		, TD.Uuid AS TaskDefinitionUuid
+	FROM app.TaskInstance TI
+		JOIN app.TaskDefinition TD
+			ON TI.TaskDefinitionId = TD.Id
+	WHERE TI.InstanceDate >= @startDate AND TI.InstanceDate < @endDate;
+
+	-- Last Task for Each Definition
+	SELECT
+		TI.Uuid
+		, TD.ShortDescription
+		, TD.Description
+		, TD.Uuid AS TaskDefinitionId
+	FROM app.TaskInstance TI
+		JOIN app.TaskDefinition TD
+			ON TI.TaskDefinitionId = TD.Id
+	WHERE TI.InstanceDate < @endDate
+		AND TI.TaskStatus != 'D' -- Deleted
+		AND ROW_NUMBER() OVER (PARTITION BY TI.TaskDefinitionId ORDER BY InstanceDate DESC) = 1;
+
+
+END
 
 GO

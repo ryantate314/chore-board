@@ -11,5 +11,7 @@ namespace ChoreBoard.Service.Repositories
     {
         Task<TaskDefinition> CreateTaskDefinition(TaskDefinition definition);
         public Task<IEnumerable<TaskDefinition>> GetTaskDefinitions();
+        public Task<IEnumerable<TaskDefinition>> GetTaskDefinitions(IEnumerable<Guid> ids);
+        Task<IEnumerable<TaskSchedule>> GetTaskSchedules(DateTime startDate, DateTime endDate);
     }
 }

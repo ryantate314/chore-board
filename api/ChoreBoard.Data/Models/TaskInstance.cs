@@ -9,7 +9,10 @@ namespace ChoreBoard.Data.Models
         public Guid Uuid { get; set; }
         public int TaskDefinitionId { get; set; }
         public DateTime InstanceDate { get; set; }
+        public string? Status { get; set; }
+        public DateTime? CompletedAt { get; set; }
 
+        public virtual TaskStatus? StatusNavigation { get; set; }
         public virtual TaskDefinition TaskDefinition { get; set; } = null!;
     }
 }

@@ -11,9 +11,10 @@ namespace ChoreBoard.Service.Models
 {
     public class TaskSchedule
     {
-        public Guid TaskDefinitionId { get; set; }
         public DateTime StartDate { get; set; }
         public DateTime EndDate { get; set; }
         public RecurrencePattern Pattern { get; set; }
+
+        public Guid TaskDefinitionId { get; set; }
     }
 }

@@ -8,7 +8,7 @@ const TaskService = {
         return fetch(`${API_URL}/tasks/${taskId}/status`, {
             method: 'PUT',
             body: JSON.stringify({
-                status: newStatus
+                newStatus: newStatus
             }),
             headers: new Headers({"Content-Type": "application/json"})
         })
@@ -24,7 +24,7 @@ const TaskService = {
             .then(response => response.json());
     },
     createTask: function(definitionId: string, instanceDate: Date, status?: string) : Promise<TaskInstance> {
-        const url = `${API_URL}/task-definitions/${encodeURIComponent(definitionId)}/create`;
+        const url = `${API_URL}/task-definitions/${encodeURIComponent(definitionId)}/tasks`;
         return fetch(url, {
             method: 'POST',
             body: JSON.stringify({

@@ -1,6 +1,6 @@
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faChevronDown, faUsers, faX, faCheck } from '@fortawesome/free-solid-svg-icons'
-import { useCallback, useEffect, useState } from 'react';
+import { faChevronDown, faChevronUp, faUsers, faX } from '@fortawesome/free-solid-svg-icons'
+import { useEffect, useState } from 'react';
 import dayjs from 'dayjs';
 import { useIdleTimer } from 'react-idle-timer'
 
@@ -15,7 +15,8 @@ import { CreateTaskModal } from '../CreateTaskModal';
 import Container from 'react-bootstrap/Container';
 import Row from 'react-bootstrap/Row';
 import Col from 'react-bootstrap/Col';
-import { Button } from 'react-bootstrap';
+import { Accordion, Button, Collapse } from 'react-bootstrap';
+import { TaskDefinitionList } from '../TaskDefinitionList';
 
 export default function Dashboard() {
 
@@ -25,8 +26,10 @@ export default function Dashboard() {
 
     const [tasks, setTasks] = useState<TaskInstance[]>([]);
     const [taskDefinitions, setTaskDefinitions] = useState<TaskDefinition[]>([]);
+    const [showDefinitions, setShowDefinitions] = useState<boolean>(false);
 
     const [showCreateTaskModal, setShowCreateTaskModal] = useState<boolean>(false);
+    const [showCreateTaskInstanceModal, setShowCreateTaskInstanceModal] = useState<boolean>(false);
 
     let [upcomingTasks, setUpcomingTasks] = useState<TaskInstance[]>([]);
     let [todoTasks, setTodoTasks] = useState<TaskInstance[]>([]);
@@ -108,6 +111,8 @@ export default function Dashboard() {
         TaskService.getTaskDefinitions()
             .then(definitions => setTaskDefinitions(definitions))
             .catch(() => alert("Error getting task definitions"));
+
+        setShowDefinitions(false);
     };
 
     const allFamilyMembers: FamilyMember[] = [
@@ -123,15 +128,21 @@ export default function Dashboard() {
 
     return (
         <Container fluid={true}>
-            <div id="quick-task-definitions" className="d-flex">
-                <div className="p-2">
-                    <FontAwesomeIcon icon={faChevronDown}></FontAwesomeIcon>
-                </div>
-                {
-                    taskDefinitions.map(def => <QuickTaskDefinition key={def.id} taskDefinition={def}></QuickTaskDefinition>)
-                }
-                <Button variant='outline-primary' onClick={() => setShowCreateTaskModal(true)}>New Task</Button>
+            <div>
+                <Button variant="outline-secondary" className="" onClick={() => setShowDefinitions(!showDefinitions)}>
+                    Tasks <FontAwesomeIcon icon={ showDefinitions ? faChevronUp : faChevronDown }></FontAwesomeIcon>
+                </Button>
             </div>
+            <Collapse in={showDefinitions}>
+                <div className="mt-2">
+                    <TaskDefinitionList
+                        showCreateTaskModal={() => setShowCreateTaskModal(true)}
+                        hideModal={() => setShowCreateTaskInstanceModal(false)}
+                        definitions={taskDefinitions}
+                        reloadTasks={reloadTasks} />
+                    
+                </div>
+            </Collapse>
             <Row>
                 <Col id="upcoming-column" className="task-column">
                     <div>
@@ -179,6 +190,7 @@ export default function Dashboard() {
             <CreateTaskModal showModal={showCreateTaskModal}
                             hideModal={() => setShowCreateTaskModal(false)}
                             reloadTasks={reloadTasks} />
+            
         </Container>
     );
 }
@@ -205,13 +217,7 @@ function TaskCard(props: { task: TaskInstance, selectTask: () => void }) {
     );
 }
 
-function QuickTaskDefinition(props: any) {
-    return (
-        <div>
-            { props.taskDefinition.shortDescription }
-        </div>
-    );
-}
+
 
 
 

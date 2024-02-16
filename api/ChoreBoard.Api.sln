@@ -13,11 +13,12 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution 
 	ProjectSection(SolutionItems) = preProject
 		.gitignore = .gitignore
 		scaffoldDatabase.ps1 = scaffoldDatabase.ps1
+		..\db\Setup.sql = ..\db\Setup.sql
 	EndProjectSection
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CoreBoard.UnitTests", "CoreBoard.UnitTests\CoreBoard.UnitTests.csproj", "{E0841D00-3624-4503-A2CA-51394D5C5938}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ChoreBoard.Api.Common", "ChoreBoard.Api.Common\ChoreBoard.Api.Common.csproj", "{BB76B39B-6BD7-4090-84BD-55C618A78F4E}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ChoreBoard.Api.Common", "ChoreBoard.Api.Common\ChoreBoard.Api.Common.csproj", "{BB76B39B-6BD7-4090-84BD-55C618A78F4E}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

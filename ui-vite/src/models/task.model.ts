@@ -20,8 +20,9 @@ export interface TaskInstance {
 }
 
 export enum TaskStatus {
-    Upcoming = "Upcoming",
-    ToDo = "ToDo",
-    InProgress = "InProgress",
-    Done = "Done"
+    Upcoming = "U",
+    ToDo = "T",
+    InProgress = "I",
+    Done = "C",
+    Deleted = "D"
 }

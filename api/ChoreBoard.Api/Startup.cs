@@ -30,9 +30,9 @@ namespace ChoreBoard.Api
         {
             services.AddControllers();
             services.AddTransient<ITaskDefinitionService, TaskDefinitionService>();
-            services.AddTransient<ITaskDefinitionRepo, TaskDefinitionRepository>();
-            services.AddDbContext<ChoreBoardContext>(
-                options => options.UseSqlServer(Configuration.GetConnectionString("ChoreBoard")));
+            services.AddTransient<ITaskService, TaskService>();
+
+            Data.Configuration.Configure(services, Configuration);
         }
 
         public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
@@ -63,7 +63,10 @@ namespace ChoreBoard.Api
 
             app.UseCors(x =>
             {
+                // TODO: Restrict to develop
                 x.AllowAnyOrigin();
+                x.AllowAnyMethod();
+                x.AllowAnyHeader();
             });
 
             app.UseRouting();

@@ -84,7 +84,17 @@ namespace ChoreBoard.Data.Models
 
                 entity.Property(e => e.InstanceDate).HasColumnType("datetime");
 
+                entity.Property(e => e.Status)
+                    .HasMaxLength(1)
+                    .IsUnicode(false)
+                    .IsFixedLength();
+
                 entity.Property(e => e.Uuid).HasDefaultValueSql("(newid())");
+
+                entity.HasOne(d => d.StatusNavigation)
+                    .WithMany(p => p.TaskInstances)
+                    .HasForeignKey(d => d.Status)
+                    .HasConstraintName("FK_TaskInstance_TaskStatus");
 
                 entity.HasOne(d => d.TaskDefinition)
                     .WithMany(p => p.TaskInstances)
