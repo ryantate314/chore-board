@@ -44,7 +44,7 @@ namespace ChoreBoard.Data.Repositories
                 .Include(x => x.TaskDefinition)
                 .Where(x =>
                     taskDefinitionIds.Contains(x.TaskDefinition.Uuid)
-                    && x.InstanceDate < before
+                    //&& x.InstanceDate < before
                     //&& (x.Status == null || x.Status != Service.Models.TaskStatus.STATUS_DELETED)
                 )
                 .GroupBy(x => x.TaskDefinition.Uuid)

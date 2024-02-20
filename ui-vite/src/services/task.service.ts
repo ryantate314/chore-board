@@ -1,14 +1,15 @@
 import { TaskDefinition, TaskInstance, TaskStatus } from '../models/task.model';
 
 
-const API_URL = "https://localhost:7067";
+const API_URL = import.meta.env.VITE_API_URL;
 
 const TaskService = {
-    updateStatus: function(taskId: string, newStatus: TaskStatus): Promise<TaskInstance> {
+    updateStatus: function(taskId: string, newStatus: TaskStatus, familyMemberId?: string): Promise<TaskInstance> {
         return fetch(`${API_URL}/tasks/${taskId}/status`, {
             method: 'PUT',
             body: JSON.stringify({
-                newStatus: newStatus
+                newStatus: newStatus,
+                familyMemberId: familyMemberId
             }),
             headers: new Headers({"Content-Type": "application/json"})
         })
@@ -23,13 +24,14 @@ const TaskService = {
         return fetch(`${API_URL}/task-definitions`)
             .then(response => response.json());
     },
-    createTask: function(definitionId: string, instanceDate: Date, status?: string) : Promise<TaskInstance> {
+    createTask: function(definitionId: string, instanceDate: Date, status?: string, familyMemberId?: string) : Promise<TaskInstance> {
         const url = `${API_URL}/task-definitions/${encodeURIComponent(definitionId)}/tasks`;
         return fetch(url, {
             method: 'POST',
             body: JSON.stringify({
                 instanceDate: instanceDate,
-                status: status
+                status: status,
+                familyMemberId: familyMemberId
             }),
             headers: new Headers({"Content-Type": "application/json"})
         }).then(response => response.json());

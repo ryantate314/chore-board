@@ -11,5 +11,8 @@ namespace ChoreBoard.Data.Models
         public string LastName { get; set; } = null!;
         public DateTime CreatedAt { get; set; }
         public DateTime? DeletedAt { get; set; }
+
+        public int FamilyId { get; set; }
+        public Family Family { get; set; } = null!;
     }
 }

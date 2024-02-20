@@ -45,9 +45,11 @@ namespace ChoreBoard.Api.Controllers
             {
                 Description = dto.Description,
                 ShortDescription = dto.ShortDescription,
+                Points = dto.Points,
+                Category = dto.Category
             };
 
-            if (dto.Frequency != Frequency.None)
+            if (dto.DoesRepeat)
             {
                 var builder = new ScheduleBuilder(dto.StartDate);
                 builder.SetFrequency(dto.Frequency);

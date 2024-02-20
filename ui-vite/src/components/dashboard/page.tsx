@@ -15,12 +15,14 @@ import { CreateTaskModal } from '../CreateTaskModal';
 import Container from 'react-bootstrap/Container';
 import Row from 'react-bootstrap/Row';
 import Col from 'react-bootstrap/Col';
-import { Accordion, Button, Collapse } from 'react-bootstrap';
+import { Button, Collapse } from 'react-bootstrap';
 import { TaskDefinitionList } from '../TaskDefinitionList';
+import { FamilyService } from '@/services/family.service';
 
 export default function Dashboard() {
 
     const [familyMember, setFamilyMember] = useState<FamilyMember | null>(null);
+    const [allFamilyMembers, setAllFamilyMembers] = useState<FamilyMember[]>([]);
 
     const [selectedTask, setSelectedTask] = useState<TaskInstance | null>(null);
 
@@ -29,7 +31,6 @@ export default function Dashboard() {
     const [showDefinitions, setShowDefinitions] = useState<boolean>(false);
 
     const [showCreateTaskModal, setShowCreateTaskModal] = useState<boolean>(false);
-    const [showCreateTaskInstanceModal, setShowCreateTaskInstanceModal] = useState<boolean>(false);
 
     let [upcomingTasks, setUpcomingTasks] = useState<TaskInstance[]>([]);
     let [todoTasks, setTodoTasks] = useState<TaskInstance[]>([]);
@@ -55,6 +56,10 @@ export default function Dashboard() {
         TaskService.getTaskDefinitions()
             .then(definitions => setTaskDefinitions(definitions))
             .catch(() => alert("Error getting task definitions"));
+
+        FamilyService.getMembers()
+            .then(members => setAllFamilyMembers(members))
+            .catch(() => alert("Error getting family members."));
     }, []);
 
     useEffect(() => {
@@ -115,17 +120,6 @@ export default function Dashboard() {
         setShowDefinitions(false);
     };
 
-    const allFamilyMembers: FamilyMember[] = [
-        {
-            id: "asdf",
-            name: "Ryan"
-        },
-        {
-            id: "asdfg",
-            name: "Callie"
-        }
-    ];
-
     return (
         <Container fluid={true}>
             <div>
@@ -137,10 +131,9 @@ export default function Dashboard() {
                 <div className="mt-2">
                     <TaskDefinitionList
                         showCreateTaskModal={() => setShowCreateTaskModal(true)}
-                        hideModal={() => setShowCreateTaskInstanceModal(false)}
+                        hideModal={() => setShowDefinitions(false)}
                         definitions={taskDefinitions}
                         reloadTasks={reloadTasks} />
-                    
                 </div>
             </Collapse>
             <Row>
@@ -186,7 +179,9 @@ export default function Dashboard() {
             <TaskModal  task={selectedTask!}
                         showModal={selectedTask != null}
                         hideModal={() => setSelectedTask(null)}
-                        updateTask={updateTask} />
+                        updateTask={updateTask}
+                        currentFamilyMember={familyMember}
+                        familyMembers={allFamilyMembers} />
             <CreateTaskModal showModal={showCreateTaskModal}
                             hideModal={() => setShowCreateTaskModal(false)}
                             reloadTasks={reloadTasks} />

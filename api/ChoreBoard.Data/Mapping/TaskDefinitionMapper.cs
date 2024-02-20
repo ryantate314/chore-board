@@ -21,6 +21,7 @@ namespace ChoreBoard.Data.Mapping
                     .ForMember(x => x.Id, opt => opt.Ignore())
                     .ForMember(x => x.Uuid, opt => opt.MapFrom(x => x.Id))
                     .ForMember(x => x.TaskSchedules, opt => opt.MapFrom(x => x.Schedules))
+                    .ForMember(x => x.CategoryId, opt => opt.MapFrom(x => x.Category))
                 .ReverseMap()
                     .ForMember(x => x.Id, opt => opt.MapFrom(x => x.Uuid));
 

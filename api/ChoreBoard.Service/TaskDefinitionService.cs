@@ -1,4 +1,5 @@
-﻿using ChoreBoard.Service.Models;
+﻿using ChoreBoard.Service.Exceptions;
+using ChoreBoard.Service.Models;
 using ChoreBoard.Service.Repositories;
 using System;
 using System.Collections.Generic;
@@ -28,9 +29,14 @@ namespace ChoreBoard.Service
             return _taskDefinitionRepo.GetTaskDefinitions();
         }
 
-        public Task<TaskDefinition> Create(TaskDefinition taskDefinition)
+        public async Task<TaskDefinition> Create(TaskDefinition taskDefinition)
         {
-            return _taskDefinitionRepo.CreateTaskDefinition(taskDefinition);
+            IEnumerable<TaskDefinition> existingDefinitiosn = await _taskDefinitionRepo.GetTaskDefinitionsByName(taskDefinition.ShortDescription);
+
+            if (existingDefinitiosn.Any())
+                throw new AlreadyExistsException($"A task definition already exists with name '{taskDefinition.ShortDescription}'.");
+
+            return await _taskDefinitionRepo.CreateTaskDefinition(taskDefinition);
         }
     }
 }

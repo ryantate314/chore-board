@@ -13,5 +13,6 @@ namespace ChoreBoard.Service.Models
         public TaskDefinition Definition { get; set; }
         public string? Status { get;set; }
         public DateTime? CompletedAt { get; set; }
+        public int? Points { get; set; }
     }
 }

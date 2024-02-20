@@ -2,6 +2,7 @@
 using ChoreBoard.Data.Models;
 using ChoreBoard.Data.Repositories;
 using ChoreBoard.Service;
+using ChoreBoard.Service.Exceptions;
 using ChoreBoard.Service.Repositories;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
@@ -13,6 +14,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using System;
+using System.Threading.Tasks;
 
 namespace ChoreBoard.Api
 {
@@ -31,6 +33,7 @@ namespace ChoreBoard.Api
             services.AddControllers();
             services.AddTransient<ITaskDefinitionService, TaskDefinitionService>();
             services.AddTransient<ITaskService, TaskService>();
+            services.AddTransient<IFamilyService, FamilyService>();
 
             Data.Configuration.Configure(services, Configuration);
         }
@@ -47,17 +50,7 @@ namespace ChoreBoard.Api
                 }
                 catch (Exception ex)
                 {
-                    var logger = app.ApplicationServices.GetService<ILogger<Startup>>();
-                    logger?.LogError(ex, $"Error performing {context.Request.Method} request to {context.Request.Path}.");
-
-                    var error = new ErrorDto()
-                    {
-                        Message = ex.Message,
-                        StackTrace = env.IsDevelopment() ? ex.StackTrace : null
-                    };
-
-                    context.Response.StatusCode = StatusCodes.Status500InternalServerError;
-                    await context.Response.WriteAsJsonAsync(error);
+                    await HandleError(app.ApplicationServices, ex, context, env);
                 }
             });
 
@@ -75,6 +68,38 @@ namespace ChoreBoard.Api
             {
                 endpoints.MapControllers();
             });
+        }
+
+        private async Task HandleError(IServiceProvider services, Exception ex, HttpContext context, IWebHostEnvironment env)
+        {
+            var logger = services.GetService<ILogger<Startup>>();
+
+            int statusCode = StatusCodes.Status500InternalServerError;
+            ErrorDto body = new ErrorDto();
+
+            if (ex is InvalidOperationException || ex is ArgumentException)
+            {
+                logger?.LogWarning(ex, $"Invalid operation performing {context.Request.Method} request to {context.Request.Path}");
+                statusCode = StatusCodes.Status400BadRequest;
+            }
+            else if (ex is AlreadyExistsException)
+            {
+                logger?.LogWarning(ex, $"Entity already exists performing {context.Request.Method} request to {context.Request.Path}");
+                statusCode = StatusCodes.Status409Conflict;
+            }
+            else
+            {
+                logger?.LogError(ex, $"Error performing {context.Request.Method} request to {context.Request.Path}.");
+            }
+
+            var error = new ErrorDto()
+            {
+                Message = ex.Message,
+                StackTrace = env.IsDevelopment() ? ex.StackTrace : null
+            };
+
+            context.Response.StatusCode = statusCode;
+            await context.Response.WriteAsJsonAsync(error);
         }
     }
 }

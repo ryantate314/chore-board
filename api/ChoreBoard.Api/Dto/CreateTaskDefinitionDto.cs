@@ -10,9 +10,14 @@ namespace ChoreBoard.Api.Dto
         [Required]
         public string ShortDescription { get; set; }
         public string? Description { get; set; }
+        public int? Points { get; set; }
+
+        public TaskCategory Category { get; set; } = TaskCategory.Family;
 
         [Required]
         public DateTime StartDate { get; set; }
+
+        public bool DoesRepeat { get; set; } = false;
 
         public DateTime? EndDate { get; set; }
         public List<int> DaysOfWeek { get; set; } = new();

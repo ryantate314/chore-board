@@ -4,6 +4,7 @@ import Modal from 'react-bootstrap/Modal';
 import Button from 'react-bootstrap/Button';
 import Form from "react-bootstrap/Form";
 import TaskService from '@/services/task.service';
+import dayjs from 'dayjs';
 
 export interface CreateTaskModalProps {
     showModal: boolean;
@@ -18,14 +19,21 @@ export enum Frequency {
     Yearly = 0
 };
 
+export enum TaskCategory {
+    Personal = 1,
+    Family = 2
+}
+
 export interface FormData
 {
     shortDescription: string | null;
     description: string | null;
+    points: number | null;
+    category: TaskCategory;
     doesRepeat: boolean;
     frequency: Frequency;
     daysOfWeek: string[];
-    startDate: string | null;
+    startDate: string;
     interval: number;
 }
 
@@ -34,10 +42,14 @@ export function CreateTaskModal(props: CreateTaskModalProps) {
     const [ formData, setFormData ] = useState<FormData>({
         shortDescription: null,
         description: null,
+        points: null,
+        category: TaskCategory.Family,
         doesRepeat: false,
         frequency: Frequency.Daily,
         daysOfWeek: [],
-        startDate: null,
+        startDate: dayjs()
+            .startOf('day')
+            .format("YYYY-MM-DDTHH:mm"),
         interval: 1
     });
     const [ frequencyDisplayName, setFrequencyDisplayName ] = useState<string>();
@@ -48,6 +60,13 @@ export function CreateTaskModal(props: CreateTaskModalProps) {
             ...formData,
             [fieldName]: newValue === undefined ? event.target.value : newValue
         } as FormData);
+    };
+
+    const toggleTaskCategory = () => {
+        setFormData({
+            ...formData,
+            category: formData.category == TaskCategory.Family ? TaskCategory.Personal : TaskCategory.Family
+        });
     };
 
     const handleClose = () => props.hideModal();
@@ -128,12 +147,30 @@ export function CreateTaskModal(props: CreateTaskModalProps) {
                 <Modal.Body>
                     <Form.Group className="mb-2">
                         <Form.Label htmlFor="newtask-shortdescription">Short Description</Form.Label>
-                        <Form.Control type="input" name="shortDescription" id="newtask-shortdescription" value={formData.shortDescription ?? ""} onChange={setFormValue} />
+                        <Form.Control type="input"
+                            name="shortDescription"
+                            id="newtask-shortdescription"
+                            value={formData.shortDescription ?? ""}
+                            onChange={setFormValue}
+                            required={true}
+                            maxLength={128} />
                     </Form.Group>
                     <Form.Group className="mb-2">
                         <Form.Label htmlFor="newtask-description">Description</Form.Label>
                         <Form.Control as="textarea" id="newtask-description" name="description" value={formData.description ?? ""} onChange={setFormValue} />
                     </Form.Group>
+                    <Form.Group className="mb-2">
+                        <Form.Label htmlFor="newtask-category">Is this a Family Task?</Form.Label>
+                        <Form.Check type="switch" id="newtask-category" name="category" checked={formData.category == TaskCategory.Family} onChange={toggleTaskCategory} />
+                    </Form.Group>
+                    {
+                        formData.category == TaskCategory.Family ?
+                            <Form.Group className="mb-2">
+                                <Form.Label htmlFor="newtask-points">Points</Form.Label>
+                                <Form.Control type="number" name="points" id="newtask-points" value={formData.points ?? 0} onChange={setFormValue} min={1} />
+                            </Form.Group>
+                            : null
+                    }
                     <Form.Group className="mb-2">
                         <Form.Label htmlFor="newtask-recurring">Does This Task Repeat?</Form.Label>
                         <Form.Check type="switch" id="newtask-recurring" checked={formData.doesRepeat} onChange={handleRecurringChange}></Form.Check>
@@ -181,7 +218,7 @@ export function CreateTaskModal(props: CreateTaskModalProps) {
                                 <Form.Control type="datetime-local"
                                     id="newtask-startdate"
                                     name="startDate"
-                                    value={formData.startDate ?? ""}
+                                    value={formData.startDate}
                                     onChange={setFormValue} />
                             </Form.Group>
                         </>

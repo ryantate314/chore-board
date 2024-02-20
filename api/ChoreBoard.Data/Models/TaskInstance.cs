@@ -11,6 +11,7 @@ namespace ChoreBoard.Data.Models
         public DateTime InstanceDate { get; set; }
         public string? Status { get; set; }
         public DateTime? CompletedAt { get; set; }
+        public int? Points { get; set; }
 
         public virtual TaskStatus? StatusNavigation { get; set; }
         public virtual TaskDefinition TaskDefinition { get; set; } = null!;

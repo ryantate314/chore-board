@@ -16,4 +16,8 @@
     <ProjectReference Include="..\ChoreBoard.Service\ChoreBoard.Service.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Folder Include="Migrations\" />
+  </ItemGroup>
+
 </Project>

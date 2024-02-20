@@ -13,6 +13,8 @@ namespace ChoreBoard.Service.Models
         public string ShortDescription { get; set; }
         public string? Description { get; set; }
         public DateTime CreatedAt { get; set; }
+        public int? Points { get; set; }
+        public TaskCategory Category { get; set; }
 
         [JsonIgnore]
         public List<TaskSchedule>? Schedules {get; set; }

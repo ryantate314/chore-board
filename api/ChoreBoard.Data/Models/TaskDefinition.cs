@@ -1,4 +1,5 @@
-﻿using System;
+﻿using ChoreBoard.Service.Models;
+using System;
 using System.Collections.Generic;
 
 namespace ChoreBoard.Data.Models
@@ -15,6 +16,8 @@ namespace ChoreBoard.Data.Models
         public Guid Uuid { get; set; }
         public string ShortDescription { get; set; } = null!;
         public string? Description { get; set; }
+        public int? Points { get; set; }
+        public int CategoryId { get; set; }
         public DateTime CreatedAt { get; set; }
         public DateTime? DeletedAt { get; set; }
 

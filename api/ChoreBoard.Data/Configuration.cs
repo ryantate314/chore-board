@@ -18,6 +18,8 @@ namespace ChoreBoard.Data
         {
             services.AddTransient<ITaskDefinitionRepo, TaskDefinitionRepository>();
             services.AddTransient<ITaskRepository, TaskRepository>();
+            services.AddTransient<IFamilyMemberRepository, FamilyRepository>();
+
             services.AddDbContext<ChoreBoardContext>(
                 options => options.UseSqlServer(config.GetConnectionString("ChoreBoard")));
         }

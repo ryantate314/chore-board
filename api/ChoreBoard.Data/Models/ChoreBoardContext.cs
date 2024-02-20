@@ -22,6 +22,7 @@ namespace ChoreBoard.Data.Models
         public virtual DbSet<TaskSchedule> TaskSchedules { get; set; } = null!;
         public virtual DbSet<TaskStatus> TaskStatuses { get; set; } = null!;
         public virtual DbSet<User> Users { get; set; } = null!;
+        public virtual DbSet<Family> Families { get; set; } = null!;
 
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
         {
@@ -55,6 +56,11 @@ namespace ChoreBoard.Data.Models
                     .IsUnicode(false);
 
                 entity.Property(e => e.Uuid).HasDefaultValueSql("(newid())");
+
+                entity.HasOne(e => e.Family)
+                    .WithMany(p => p.FamilyMembers)
+                    .HasForeignKey(e => e.FamilyId)
+                    .HasConstraintName("FK_FamilyMember_Family");
             });
 
             modelBuilder.Entity<TaskDefinition>(entity =>
@@ -142,6 +148,14 @@ namespace ChoreBoard.Data.Models
                 entity.Property(e => e.Description)
                     .HasMaxLength(32)
                     .IsUnicode(false);
+
+                entity.HasData(
+                    new TaskStatus() { StatusCode = Service.Models.TaskStatus.STATUS_UPCOMING, Description = "Upcoming" },
+                    new TaskStatus() { StatusCode = Service.Models.TaskStatus.STATUS_TODO, Description = "To Do" },
+                    new TaskStatus() { StatusCode = Service.Models.TaskStatus.STATUS_IN_PROGRESS, Description = "In Progress" },
+                    new TaskStatus() { StatusCode = Service.Models.TaskStatus.STATUS_COMPLETED, Description = "Completed" },
+                    new TaskStatus() { StatusCode = Service.Models.TaskStatus.STATUS_DELETED, Description = "Deleted" }
+                );
             });
 
             modelBuilder.Entity<User>(entity =>
@@ -169,6 +183,29 @@ namespace ChoreBoard.Data.Models
                     .IsFixedLength();
 
                 entity.Property(e => e.Uuid).HasDefaultValueSql("(newid())");
+            });
+
+            modelBuilder.Entity<Family>(entity =>
+            {
+                entity.HasKey(e => e.Id);
+
+                entity.ToTable("Family", "app");
+
+                entity.Property(e => e.Uuid)
+                   .HasDefaultValueSql("(newid())");
+
+                entity.HasIndex(e => e.Uuid, "UQ_Family_Uuid")
+                    .IsUnique();
+
+                entity.Property(e => e.CreatedAt)
+                    .HasColumnType("datetime")
+                    .HasDefaultValueSql("(getdate())");
+
+                entity.Property(e => e.DeletedAt).HasColumnType("datetime");
+
+                entity.Property(e => e.Name)
+                    .HasMaxLength(64)
+                    .IsUnicode(true);
             });
 
             OnModelCreatingPartial(modelBuilder);

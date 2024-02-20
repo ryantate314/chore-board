@@ -1,16 +1,9 @@
 ﻿using ChoreBoard.Data.Mapping;
 using ChoreBoard.Data.Models;
-using ChoreBoard.Service.Models;
 using ChoreBoard.Service.Repositories;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using ChoreBoard.Api.Common;
-using Microsoft.EntityFrameworkCore.ChangeTracking;
 
 namespace ChoreBoard.Data.Repositories
 {
@@ -57,7 +50,7 @@ namespace ChoreBoard.Data.Repositories
 
             _logger.LogDebugJson("Creating new TaskDefinition", model);
 
-            EntityEntry<Models.TaskDefinition> entity = _context.TaskDefinitions.Add(model);
+            _context.TaskDefinitions.Add(model);
 
             await _context.SaveChangesAsync();
 
@@ -74,6 +67,17 @@ namespace ChoreBoard.Data.Repositories
                 .ToListAsync();
 
             return schedules.Select(_scheduleMapper.Map)
+                .ToList();
+        }
+
+        public async Task<IEnumerable<Service.Models.TaskDefinition>> GetTaskDefinitionsByName(string shortDescription)
+        {
+            List<TaskDefinition> definitions = await _context.TaskDefinitions
+                .Include(x => x.TaskSchedules)
+                .Where(x => x.ShortDescription == shortDescription && x.DeletedAt == null)
+                .ToListAsync();
+
+            return definitions.Select(_mapper.Map)
                 .ToList();
         }
     }

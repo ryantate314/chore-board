@@ -107,7 +107,9 @@ namespace ChoreBoard.Service
             Dictionary<Guid, TaskInstance> mostRecentTasks = await _taskInstanceRepo.GetMostRecentTask(allTaskDefinitionIds, endDate);
             IEnumerable<TaskDefinition> taskDefinitions = await _taskDefinitionRepo.GetTaskDefinitions(allTaskDefinitionIds);
 
-            var allTasks = new List<TaskInstance>();
+            // Start with all non-scheduled tasks.
+            List<TaskInstance> allTasks = allConcreteInstances.Where(x => !schedules.Any(y => y.TaskDefinitionId == x.Definition.Id))
+                .ToList();
 
             foreach (TaskSchedule schedule in schedules)
             {
