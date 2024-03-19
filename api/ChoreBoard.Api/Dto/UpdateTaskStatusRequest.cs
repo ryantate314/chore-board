@@ -7,6 +7,6 @@ namespace ChoreBoard.Api.Dto
     {
         [TaskStatus]
         public string NewStatus { get; set; }
-        public Guid? FamilyMember { get; set; }
+        public Guid? FamilyMemberId { get; set; }
     }
 }

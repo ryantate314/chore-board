@@ -17,6 +17,7 @@ export interface TaskInstance {
     instanceDate: Date;
     createdAt: Date;
     completedAt: Date | null;
+    completedBy: FamilyMember | null;
 }
 
 export enum TaskStatus {

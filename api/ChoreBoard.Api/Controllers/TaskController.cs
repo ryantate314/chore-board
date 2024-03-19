@@ -30,7 +30,7 @@ namespace ChoreBoard.Api.Controllers
         [HttpPut("{id}/status")]
         public async Task<IActionResult> UpdateTaskStatus([FromRoute] Guid id, [FromBody] UpdateTaskStatusRequest dto)
         {
-            TaskInstance instance = await _service.UpdateStatus(id, dto.NewStatus, dto.FamilyMember);
+            TaskInstance instance = await _service.UpdateStatus(id, dto.NewStatus, dto.FamilyMemberId);
 
             return Ok(instance);
         }

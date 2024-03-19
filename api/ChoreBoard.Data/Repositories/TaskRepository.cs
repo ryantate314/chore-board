@@ -20,6 +20,7 @@ namespace ChoreBoard.Data.Repositories
         {
             return _context.TaskInstances.Where(x => x.Uuid == id)
                 .Include(x => x.TaskDefinition)
+                .Include(x => x.CompletedBy)
                 .FirstAsync();
         }
 
@@ -27,6 +28,7 @@ namespace ChoreBoard.Data.Repositories
         {
             List<Models.TaskInstance> instances = await _context.TaskInstances
                 .Include(x => x.TaskDefinition)
+                .Include(x => x.CompletedBy)
                 .Where(x =>
                     ( x.InstanceDate >= startDate && x.InstanceDate < endDate )
                     || (x.CompletedAt >= startDate && x.CompletedAt < endDate )
@@ -42,6 +44,7 @@ namespace ChoreBoard.Data.Repositories
         {
             List<Models.TaskInstance> instances = await _context.TaskInstances
                 .Include(x => x.TaskDefinition)
+                .Include(x => x.CompletedBy)
                 .Where(x =>
                     taskDefinitionIds.Contains(x.TaskDefinition.Uuid)
                     //&& x.InstanceDate < before
@@ -75,16 +78,29 @@ namespace ChoreBoard.Data.Repositories
             return _mapper.Map(taskModel);
         }
 
-        public async Task<Service.Models.TaskInstance> UpdateStatus(Guid taskId, string? status, Guid? familyMember)
+        public async Task<Service.Models.TaskInstance> UpdateStatus(Guid taskId, string? status, Guid? familyMemberId)
         {
             TaskInstance task = await _context.TaskInstances
                 .Include(x => x.TaskDefinition)
                 .SingleAsync(x => x.Uuid == taskId);
 
             task.Status = status;
-            task.CompletedAt = status != Service.Models.TaskStatus.STATUS_COMPLETED
-                ? null
-                : DateTime.UtcNow;
+
+            if (status == Service.Models.TaskStatus.STATUS_COMPLETED)
+            {
+                task.CompletedAt = DateTime.UtcNow;
+
+                if (familyMemberId != null)
+                {
+                    FamilyMember? familyMember = await _context.FamilyMembers.SingleAsync(x => x.Uuid == familyMemberId);
+                    task.CompletedById = familyMember.Id;
+                }
+            }
+            else
+            {
+                task.CompletedAt = null;
+                task.CompletedById = null;
+            }
 
             // TODO: log status change history
 

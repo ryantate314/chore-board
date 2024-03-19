@@ -5,6 +5,11 @@ namespace ChoreBoard.Data.Models
 {
     public partial class FamilyMember
     {
+        public FamilyMember()
+        {
+            Tasks = new HashSet<TaskInstance>();
+        }
+
         public int Id { get; set; }
         public Guid Uuid { get; set; }
         public string FirstName { get; set; } = null!;
@@ -13,6 +18,8 @@ namespace ChoreBoard.Data.Models
         public DateTime? DeletedAt { get; set; }
 
         public int FamilyId { get; set; }
-        public Family Family { get; set; } = null!;
+        public virtual Family Family { get; set; } = null!;
+
+        public virtual ICollection<TaskInstance> Tasks { get; set; }
     }
 }

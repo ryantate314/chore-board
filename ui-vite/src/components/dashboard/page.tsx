@@ -1,5 +1,5 @@
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faChevronDown, faChevronUp, faUsers, faX } from '@fortawesome/free-solid-svg-icons'
+import { faChevronDown, faChevronUp, faEllipsis, faUsers, faX } from '@fortawesome/free-solid-svg-icons'
 import { useEffect, useState } from 'react';
 import dayjs from 'dayjs';
 import { useIdleTimer } from 'react-idle-timer'
@@ -15,7 +15,7 @@ import { CreateTaskModal } from '../CreateTaskModal';
 import Container from 'react-bootstrap/Container';
 import Row from 'react-bootstrap/Row';
 import Col from 'react-bootstrap/Col';
-import { Button, Collapse } from 'react-bootstrap';
+import { Button, Collapse, Dropdown } from 'react-bootstrap';
 import { TaskDefinitionList } from '../TaskDefinitionList';
 import { FamilyService } from '@/services/family.service';
 
@@ -122,10 +122,18 @@ export default function Dashboard() {
 
     return (
         <Container fluid={true}>
-            <div>
+            <div className='d-flex'>
                 <Button variant="outline-secondary" className="" onClick={() => setShowDefinitions(!showDefinitions)}>
                     Tasks <FontAwesomeIcon icon={ showDefinitions ? faChevronUp : faChevronDown }></FontAwesomeIcon>
                 </Button>
+                <Dropdown className='ms-auto'>
+                    <Dropdown.Toggle variant="outline-secondary" className='dropdown-no-arrow'>
+                        <FontAwesomeIcon icon={faEllipsis}></FontAwesomeIcon>
+                    </Dropdown.Toggle>
+                    <Dropdown.Menu>
+                        <Dropdown.Item>Manage Family</Dropdown.Item>
+                    </Dropdown.Menu>
+                </Dropdown>
             </div>
             <Collapse in={showDefinitions}>
                 <div className="mt-2">
@@ -207,6 +215,7 @@ function TaskCard(props: { task: TaskInstance, selectTask: () => void }) {
 
     return (
         <div role="button" className="border rounded p-2" onClick={() => { selectTask() }}>
+            { task.completedBy != null ? <span>{ task.completedBy.name[0] }&nbsp;</span> : null}
             { task.definition.shortDescription }
         </div>
     );

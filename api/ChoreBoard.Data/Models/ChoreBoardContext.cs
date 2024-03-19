@@ -107,6 +107,11 @@ namespace ChoreBoard.Data.Models
                     .HasForeignKey(d => d.TaskDefinitionId)
                     .OnDelete(DeleteBehavior.ClientSetNull)
                     .HasConstraintName("FK_TaskInstance_TaskDefinitionId_TaskDefinition");
+
+                entity.HasOne(e => e.CompletedBy)
+                    .WithMany(p => p.Tasks)
+                    .HasForeignKey(e => e.CompletedById)
+                    .HasConstraintName("FK_TaskInstance_CompletedById_FamilyMember");
             });
 
             modelBuilder.Entity<TaskSchedule>(entity =>

@@ -14,3 +14,7 @@
     height: 7rem;
     font-size: 30px !important;
 }
+
+.dropdown-no-arrow::after {
+    display: none !important; 
+}
