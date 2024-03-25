@@ -1,7 +1,14 @@
 services:
   api:
     build: ./api
+    ports:
+      - "9006:80"
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ConnectionStrings:ChoreBoard=${CONNECTION_STRING}
   ui:
-    build: ./api-vite
+    build: ./ui-vite
+    ports:
+      - "9007:80"
     depends_on:
       - api

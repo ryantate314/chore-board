@@ -20,7 +20,7 @@ namespace ChoreBoard.Api.Controllers
         [HttpGet]
         public async Task<IActionResult> GetAll()
         {
-            var familyId = new Guid("A91A2410-77D6-405C-8920-80D3FD15367E");
+            var familyId = new Guid("764876C8-AD73-457B-BF8C-40557B895A8D");
 
             IEnumerable<Service.Models.FamilyMember> familyMembers = await _service.GetMembers(familyId);
 

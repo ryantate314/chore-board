@@ -15,7 +15,7 @@ function App() {
 
   const router = createBrowserRouter([
     {
-      path: '',
+      path: import.meta.env.BASE_URL,
       Component: Dashboard
     }
   ])

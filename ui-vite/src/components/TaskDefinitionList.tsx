@@ -1,7 +1,7 @@
 import { TaskDefinition, TaskStatus } from "@/models/task.model";
 import TaskService from "@/services/task.service";
 import { useEffect, useState } from "react";
-import { Button, Col, Form, Modal, Row } from "react-bootstrap";
+import { Button, Form } from "react-bootstrap";
 
 export interface TaskDefinitionListProps {
     hideModal: () => void;
@@ -24,7 +24,7 @@ export function TaskDefinitionList(props: TaskDefinitionListProps) {
             });
     };
 
-    const handleClose = () => props.hideModal();
+    // const handleClose = () => props.hideModal();
 
     const [searchTerm, setSearchTerm] = useState("");
     const [searchResults, setSearchResults] = useState<TaskDefinition[]>([]);
